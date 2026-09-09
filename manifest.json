@@ -1,0 +1,13 @@
+{
+  "name": "Tysklandsstien",
+  "short_name": "Tysklandsstien",
+  "description": "En feltdagbok for familien — tolv stoppesteder fra skog til kyst",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#1f3329",
+  "theme_color": "#1f3329",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
