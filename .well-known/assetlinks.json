@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.vangcreativeforest.tysklandsstien",
+        "sha256_cert_fingerprints": ["47:C7:27:79:A7:61:09:D4:D4:3B:D2:78:9F:DD:D3:E0:13:81:25:0B:EA:90:30:07:FA:5E:7B:08:CB:47:AD:34"]
+      }
+    }]
