@@ -1107,10 +1107,11 @@
 
   document.querySelectorAll('.words').forEach(function(table){
     var rows = Array.prototype.slice.call(table.querySelectorAll('tbody tr'));
-    rows.forEach(function(tr){
+    var words = rows.map(function(tr){ return tr.querySelector('.de').textContent.trim(); });
+    rows.forEach(function(tr, i){
       var deCell = tr.querySelector('.de');
       if (!deCell) return;
-      var word = deCell.textContent.trim();
+      var word = words[i];
       var btn = makeSpeakBtn('Hør «' + word + '»');
       btn.addEventListener('click', function(){ speakOne(word, btn); });
       deCell.appendChild(btn);
@@ -1118,7 +1119,7 @@
     if (rows.length){
       var playAll = makePlayAllBtn('Hør alle ord');
       playAll.addEventListener('click', function(){
-        speakSequence(rows.map(function(tr){ return tr.querySelector('.de').textContent.trim(); }));
+        speakSequence(words);
       });
       table.parentNode.insertBefore(playAll, table);
     }
