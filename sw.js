@@ -1,4 +1,4 @@
-const CACHE = 'tysklandsstien-v9';
+const CACHE = 'tysklandsstien-v10';
 const CORE_ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
