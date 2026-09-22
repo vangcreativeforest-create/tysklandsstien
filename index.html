@@ -213,6 +213,12 @@
   .waypoint-head h2{font-size:1.45rem;}
   .waypoint-head .en{font-size:.95rem; color:var(--ink-soft); font-style:italic; margin-top:.2em;}
 
+  .waypoint-photo{
+    width:100%; aspect-ratio:2.1/1; object-fit:cover;
+    border-radius:6px; display:block; margin:4px 0 20px;
+    border:1px solid var(--paper-edge);
+  }
+
   .dialogue{
     display:flex; flex-direction:column; gap:10px;
     margin:18px 0 22px;
@@ -434,6 +440,8 @@
             <p class="en">Hilsener og hverdagshøflighet</p>
           </div>
         </div>
+
+        <img class="waypoint-photo" src="lesson-01.webp" alt="Bruno og Pelle møtes ved stiens startpunkt, med et skilt som peker mot skog, fjell og kyst" loading="lazy" width="1795" height="876">
 
         <div class="dialogue">
           <div class="line bruno"><svg><use href="#icon-bruno"/></svg><div class="bubble"><span class="who">Bruno</span>Hallo, Pelle!</div></div>
