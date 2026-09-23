@@ -253,6 +253,17 @@
   .waypoint.coast .words .say{color:var(--coral);}
   .words .en{font-style:italic; color:var(--ink-soft); font-size:.92rem;}
 
+  .words thead th:nth-child(2), .words td.say{display:none;}
+  .show-say .words thead th:nth-child(2), .show-say .words td.say{display:table-cell;}
+
+  .say-toggle{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'JetBrains Mono',monospace; font-size:.78rem;
+    background:transparent; border:1px solid var(--paper-edge); border-radius:999px;
+    padding:5px 12px; margin-left:8px; cursor:pointer; color:var(--ink-soft);
+  }
+  .say-toggle:hover, .say-toggle:focus-visible{border-color:var(--amber); color:var(--ink); outline:none;}
+
   .review{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:16px;}
   .review .eyebrow{color:var(--ink-soft); margin-right:4px;}
   .chip{
@@ -387,6 +398,7 @@
     <div class="howto">
       <span class="eyebrow">Slik går dere stien</span>
       Ett stoppested per økt er nok — ti minutter holder. Les samtalen mellom Bruno og Pelle høyt først, bare for å høre hvordan det klinger (noen «bonusord» sniker seg alltid inn før dere har lært dem — det er helt normalt, ikke stopp for å forstå hvert eneste ord). Gå så gjennom ordlisten, si hvert ord høyt, og prøv familieaktiviteten før dere går videre. Hvert stoppested starter med et par ord fra det forrige, så ingenting trenger å pugges på én gang. Trykk på 🔊 hvor som helst for å høre riktig uttale.
+      <button type="button" class="say-toggle" id="say-toggle">Vis uttale-tekst</button>
     </div>
   </section>
 
@@ -1067,6 +1079,25 @@
   <p class="sign">Bruno &amp; Pelle</p>
   <p>Bis bald — gå stien igjen når dere vil.</p>
 </footer>
+
+<script>
+(function(){
+  // --- Toggle for the "Høres ut som" column, hidden by default ---
+  var KEY = 'tysklandsstien-show-say';
+  var btn = document.getElementById('say-toggle');
+  function setShown(shown){
+    document.documentElement.classList.toggle('show-say', shown);
+    btn.textContent = shown ? 'Skjul uttale-tekst' : 'Vis uttale-tekst';
+    try { localStorage.setItem(KEY, shown ? '1' : '0'); } catch (e) {}
+  }
+  var stored;
+  try { stored = localStorage.getItem(KEY); } catch (e) {}
+  setShown(stored === '1');
+  btn.addEventListener('click', function(){
+    setShown(!document.documentElement.classList.contains('show-say'));
+  });
+})();
+</script>
 
 <script>
   // --- Offline + installable: register the service worker ---
