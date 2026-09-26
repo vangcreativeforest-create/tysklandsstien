@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tysklandsstien</title>
 <style>
   :root{
@@ -278,6 +280,41 @@
   }
   .activity .eyebrow{color:var(--coral); display:block; margin-bottom:4px;}
   .waypoint:not(.coast) .activity .eyebrow{color:var(--amber);}
+
+  .quiz{
+    border-top:1px dashed var(--paper-edge);
+    padding-top:16px; margin-top:18px;
+  }
+  .quiz > .eyebrow{color:var(--coral); display:block; margin-bottom:4px;}
+  .waypoint:not(.coast) .quiz > .eyebrow{color:var(--amber);}
+  .quiz-intro{font-size:.94rem; margin-bottom:10px;}
+  .quiz-btn{
+    font-family:'Fredoka',system-ui,sans-serif; font-weight:600; font-size:1rem;
+    background:var(--amber); color:var(--forest-deep);
+    border:0; border-radius:999px; padding:10px 22px; cursor:pointer;
+  }
+  .quiz-btn:hover, .quiz-btn:focus-visible{filter:brightness(1.08); outline:2px solid var(--ink); outline-offset:2px;}
+  .quiz-progress{font-family:'JetBrains Mono',monospace; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:6px;}
+  .quiz-word{display:flex; align-items:center; gap:10px; margin-bottom:4px;}
+  .quiz-de{font-family:'Fredoka',system-ui,sans-serif; font-weight:600; font-size:1.7rem;}
+  .quiz-word .speak-btn{width:34px; height:34px; font-size:1rem; margin-left:0;}
+  .quiz-prompt{font-size:.9rem; color:var(--ink-soft); margin-bottom:10px;}
+  .quiz-choices{display:flex; flex-direction:column; gap:8px;}
+  .quiz-choice{
+    text-align:left; font-family:inherit; font-size:1rem; color:var(--ink);
+    background:transparent; border:1px solid var(--paper-edge); border-radius:10px;
+    padding:12px 14px; min-height:46px; cursor:pointer;
+  }
+  .quiz-choice:hover:not(:disabled), .quiz-choice:focus-visible{border-color:var(--amber); outline:none;}
+  .quiz-choice:disabled{cursor:default;}
+  .quiz-choice.is-correct{background:color-mix(in srgb, var(--forest-mid) 38%, var(--paper)); border-color:var(--forest-mid);}
+  .quiz-choice.is-wrong{background:color-mix(in srgb, var(--coral) 32%, var(--paper)); border-color:var(--coral);}
+  .quiz-result{text-align:center;}
+  .quiz-video{width:100%; aspect-ratio:16/9; border-radius:8px; background:#000; display:block; margin:0 0 12px;}
+  .quiz-emoji{font-size:4rem; line-height:1.2; margin-bottom:8px;}
+  .quiz-msg{font-family:'Fredoka',system-ui,sans-serif; font-weight:600; font-size:1.15rem; margin-bottom:6px;}
+  .quiz-review{font-size:.88rem; color:var(--ink-soft); margin-bottom:12px;}
+  .quiz-result .quiz-btn{margin-top:6px;}
 
   .finale-flag{display:flex; justify-content:center; margin:8px 0 0;}
   .finale-flag svg{width:40px; height:40px;}
@@ -1100,6 +1137,169 @@
 </script>
 
 <script>
+(function(){
+  // --- End-of-lesson vocabulary quiz: 3 random words, then a celebration or "oh no" video ---
+  var QUESTIONS = 3;
+  var PASS_SCORE = 2;
+
+  function shuffle(a){
+    for (var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function el(tag, cls, text){
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  function cleanText(cell, selector){
+    var c = cell.cloneNode(true);
+    c.querySelectorAll(selector).forEach(function(n){ n.remove(); });
+    return c.textContent.replace(/\s+/g, ' ').trim();
+  }
+  function say(text, btn){
+    if (window.speakGerman) window.speakGerman(text, btn);
+  }
+  function wordsOf(section){
+    var out = [];
+    section.querySelectorAll('.words tbody tr').forEach(function(tr){
+      var de = tr.querySelector('.de'), en = tr.querySelector('.en');
+      if (!de || !en) return;
+      var d = cleanText(de, '.speak-btn'), e = cleanText(en, 'span');
+      if (d && e) out.push({ de: d, en: e });
+    });
+    return out;
+  }
+  function makeQuestions(words){
+    return shuffle(words.slice()).slice(0, Math.min(QUESTIONS, words.length)).map(function(w){
+      var seen = {}; seen[w.en.toLowerCase()] = true;
+      var wrong = [];
+      shuffle(words.slice()).forEach(function(o){
+        var k = o.en.toLowerCase();
+        if (wrong.length < 2 && !seen[k]){ seen[k] = true; wrong.push(o.en); }
+      });
+      return { de: w.de, en: w.en, choices: shuffle([w.en].concat(wrong)) };
+    });
+  }
+
+  function init(section){
+    var words = wordsOf(section);
+    if (words.length < 3) return;
+
+    var quiz = el('div', 'quiz');
+    quiz.appendChild(el('span', 'eyebrow', 'Test deg selv'));
+    var intro = el('p', 'quiz-intro', 'Tre ord fra dette stoppestedet — klarer du dem?');
+    var start = el('button', 'quiz-btn', 'Start quizen');
+    start.type = 'button';
+    var body = el('div', 'quiz-body');
+    body.setAttribute('aria-live', 'polite');
+    body.hidden = true;
+    quiz.appendChild(intro); quiz.appendChild(start); quiz.appendChild(body);
+
+    var flag = section.querySelector('.finale-flag');
+    if (flag) section.insertBefore(quiz, flag); else section.appendChild(quiz);
+
+    var questions, idx, score, missed;
+
+    function run(){
+      questions = makeQuestions(words);
+      idx = 0; score = 0; missed = [];
+      intro.hidden = true; start.hidden = true; body.hidden = false;
+      renderQuestion();
+    }
+
+    function renderQuestion(){
+      var q = questions[idx];
+      body.textContent = '';
+      var wordRow = el('div', 'quiz-word');
+      wordRow.appendChild(el('span', 'quiz-de', q.de));
+      var sp = el('button', 'speak-btn', '🔊');
+      sp.type = 'button';
+      sp.setAttribute('aria-label', 'Hør «' + q.de + '»');
+      sp.addEventListener('click', function(){ say(q.de, sp); });
+      wordRow.appendChild(sp);
+
+      var list = el('div', 'quiz-choices');
+      q.choices.forEach(function(c){
+        var b = el('button', 'quiz-choice', c);
+        b.type = 'button';
+        b.addEventListener('click', function(){ answer(b, c, q, list); });
+        list.appendChild(b);
+      });
+
+      body.appendChild(el('p', 'quiz-progress', 'Spørsmål ' + (idx + 1) + ' av ' + questions.length));
+      body.appendChild(wordRow);
+      body.appendChild(el('p', 'quiz-prompt', 'Hva betyr dette ordet?'));
+      body.appendChild(list);
+      say(q.de);
+    }
+
+    function answer(btn, choice, q, list){
+      if (list.getAttribute('data-done')) return;
+      list.setAttribute('data-done', '1');
+      var correct = choice === q.en;
+      Array.prototype.forEach.call(list.children, function(b){
+        b.disabled = true;
+        if (b.textContent === q.en) b.classList.add('is-correct');
+      });
+      if (correct) score++;
+      else { btn.classList.add('is-wrong'); missed.push(q); }
+      setTimeout(function(){
+        idx++;
+        if (idx < questions.length) renderQuestion(); else showResult();
+      }, correct ? 900 : 1700);
+    }
+
+    function showResult(){
+      var pass = score >= PASS_SCORE;
+      if (window.speechSynthesis) speechSynthesis.cancel();
+      body.textContent = '';
+      var box = el('div', 'quiz-result ' + (pass ? 'is-pass' : 'is-fail'));
+
+      var video = document.createElement('video');
+      video.className = 'quiz-video';
+      video.playsInline = true;
+      video.setAttribute('playsinline', '');
+      video.preload = 'auto';
+      video.src = pass ? 'celebrate.mp4' : 'ohno.mp4';
+      var fallback = el('div', 'quiz-emoji', pass ? '🎉' : '😬');
+      fallback.hidden = true;
+      video.addEventListener('error', function(){ video.hidden = true; fallback.hidden = false; });
+      box.appendChild(video);
+      box.appendChild(fallback);
+
+      box.appendChild(el('p', 'quiz-msg', pass
+        ? (score === questions.length ? 'Bra jobba! ' : 'Flott! ') + score + ' av ' + questions.length + ' riktige.'
+        : 'Oi, oi! ' + score + ' av ' + questions.length + ' riktige. Ikke gi opp — prøv igjen!'));
+      if (missed.length){
+        box.appendChild(el('p', 'quiz-review', 'Øv mer på: ' + missed.map(function(q){ return q.de + ' = ' + q.en; }).join(' · ')));
+      }
+      var again = el('button', 'quiz-btn', pass ? 'Ta quizen på nytt' : 'Prøv igjen');
+      again.type = 'button';
+      again.addEventListener('click', function(){ video.pause(); run(); });
+      box.appendChild(again);
+      body.appendChild(box);
+
+      var p = video.play();
+      if (p && p.catch) p.catch(function(){
+        video.muted = true;
+        var p2 = video.play();
+        if (p2 && p2.catch) p2.catch(function(){ video.controls = true; });
+      });
+      box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    start.addEventListener('click', run);
+  }
+
+  document.querySelectorAll('.waypoint').forEach(init);
+})();
+</script>
+
+<script>
   // --- Offline + installable: register the service worker ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function(){
@@ -1147,6 +1347,7 @@
     speechSynthesis.cancel();
     texts.forEach(function(t){ speechSynthesis.speak(utter(t)); });
   }
+  window.speakGerman = speakOne;
   function bubbleText(bubble){
     var clone = bubble.cloneNode(true);
     var who = clone.querySelector('.who');
