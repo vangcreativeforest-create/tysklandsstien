@@ -1121,7 +1121,7 @@
 
       <!-- LESSON 16 -->
       <section class="waypoint coast" id="lesson-16">
-        <img class="waypoint-photo" src="lesson-16.webp" alt="Pelle introduserer Bruno for de nye vennene Frida og Nils på en ny øy" loading="lazy">
+        <img class="waypoint-photo" src="lesson-16.webp" alt="Bruno og Pelle vinker til revungen Frida og elgen Nils ved en liten fiskerihavn" loading="lazy">
 
         <div class="waypoint-head">
           <div class="marker"><svg><use href="#icon-pelle"/></svg></div>
@@ -1162,7 +1162,7 @@
 
       <!-- LESSON 17 -->
       <section class="waypoint coast" id="lesson-17">
-        <img class="waypoint-photo" src="lesson-17.webp" alt="Bruno, Pelle, Frida og Nils spiller fotball sammen på gresset" loading="lazy">
+        <img class="waypoint-photo" src="lesson-17.webp" alt="Bruno, Pelle, revungen Frida og elgen Nils spiller fotball sammen på gresset" loading="lazy">
 
         <div class="waypoint-head">
           <div class="marker"><svg><use href="#icon-bruno"/></svg></div>
@@ -1244,7 +1244,7 @@
 
       <!-- LESSON 19 -->
       <section class="waypoint coast" id="lesson-19">
-        <img class="waypoint-photo" src="lesson-19.webp" alt="Bruno og Pelle synger og spiller musikk rundt bålet med vennene sine" loading="lazy">
+        <img class="waypoint-photo" src="lesson-19.webp" alt="Bruno spiller gitar mens Pelle trommer, og Frida danser rundt bålet sammen med Nils" loading="lazy">
 
         <div class="waypoint-head">
           <div class="marker"><svg><use href="#icon-bruno"/></svg></div>
@@ -1285,7 +1285,7 @@
 
       <!-- LESSON 20 -->
       <section class="waypoint coast" id="lesson-20">
-        <img class="waypoint-photo" src="lesson-20.webp" alt="Bruno, Pelle, Frida og Nils feirer bursdag sammen med kake og gaver på øya" loading="lazy">
+        <img class="waypoint-photo" src="lesson-20.webp" alt="Bruno, Pelle, revungen Frida og elgen Nils feirer bursdag med kake og gaver under flagg og lykter" loading="lazy">
 
         <div class="waypoint-head">
           <div class="marker"><svg><use href="#icon-flag"/></svg></div>
@@ -1358,7 +1358,17 @@
 (function(){
   // --- End-of-lesson vocabulary quiz: 3 random words, then a celebration or "oh no" video ---
   var QUESTIONS = 3;
-  var PASS_SCORE = 2;
+  // One outcome per possible score (0..QUESTIONS), from worst to best.
+  var RESULT_TIERS = [
+    { video: 'ohno.mp4', emoji: '😬', cls: 'is-fail', btn: 'Prøv igjen',
+      msg: function(s, t){ return 'Oi, oi! ' + s + ' av ' + t + ' riktige. Ikke gi opp — prøv igjen!'; } },
+    { video: 'pelle-catches.mp4', emoji: '🥅', cls: 'is-fail', btn: 'Prøv igjen',
+      msg: function(s, t){ return 'Nesten! Pelle reddet den — ' + s + ' av ' + t + ' riktige. Prøv igjen!'; } },
+    { video: 'bruno-scores.mp4', emoji: '⚽', cls: 'is-pass', btn: 'Ta quizen på nytt',
+      msg: function(s, t){ return 'Scoring! ' + s + ' av ' + t + ' riktige.'; } },
+    { video: 'celebrate.mp4', emoji: '🎉', cls: 'is-pass', btn: 'Ta quizen på nytt',
+      msg: function(s, t){ return 'Bra jobba! ' + s + ' av ' + t + ' riktige.'; } },
+  ];
 
   function shuffle(a){
     for (var i = a.length - 1; i > 0; i--){
@@ -1472,30 +1482,28 @@
     }
 
     function showResult(){
-      var pass = score >= PASS_SCORE;
+      var tier = RESULT_TIERS[Math.min(score, RESULT_TIERS.length - 1)];
       if (window.speechSynthesis) speechSynthesis.cancel();
       body.textContent = '';
-      var box = el('div', 'quiz-result ' + (pass ? 'is-pass' : 'is-fail'));
+      var box = el('div', 'quiz-result ' + tier.cls);
 
       var video = document.createElement('video');
       video.className = 'quiz-video';
       video.playsInline = true;
       video.setAttribute('playsinline', '');
       video.preload = 'auto';
-      video.src = pass ? 'celebrate.mp4' : 'ohno.mp4';
-      var fallback = el('div', 'quiz-emoji', pass ? '🎉' : '😬');
+      video.src = tier.video;
+      var fallback = el('div', 'quiz-emoji', tier.emoji);
       fallback.hidden = true;
       video.addEventListener('error', function(){ video.hidden = true; fallback.hidden = false; });
       box.appendChild(video);
       box.appendChild(fallback);
 
-      box.appendChild(el('p', 'quiz-msg', pass
-        ? (score === questions.length ? 'Bra jobba! ' : 'Flott! ') + score + ' av ' + questions.length + ' riktige.'
-        : 'Oi, oi! ' + score + ' av ' + questions.length + ' riktige. Ikke gi opp — prøv igjen!'));
+      box.appendChild(el('p', 'quiz-msg', tier.msg(score, questions.length)));
       if (missed.length){
         box.appendChild(el('p', 'quiz-review', 'Øv mer på: ' + missed.map(function(q){ return q.de + ' = ' + q.en; }).join(' · ')));
       }
-      var again = el('button', 'quiz-btn', pass ? 'Ta quizen på nytt' : 'Prøv igjen');
+      var again = el('button', 'quiz-btn', tier.btn);
       again.type = 'button';
       again.addEventListener('click', function(){ video.pause(); run(); });
       box.appendChild(again);

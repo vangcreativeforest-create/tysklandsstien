@@ -1,7 +1,7 @@
-const CACHE = 'tysklandsstien-v17';
+const CACHE = 'tysklandsstien-v18';
 const CORE_ASSETS = [
   './', './index.html', './manifest.json', './icon.svg', './icon-192.png', './icon-512.png',
-  './celebrate.mp4', './ohno.mp4',
+  './celebrate.mp4', './ohno.mp4', './bruno-scores.mp4', './pelle-catches.mp4',
 ];
 
 self.addEventListener('install', (event) => {
